@@ -3,234 +3,642 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Log Analyser</title>
+<title>Log Analyser · IBM</title>
 <style>
-  :root { --bg:#f6f7f9; --card:#fff; --bd:#dfe3e8; --tx:#1f2328; --mu:#5b6570; --ac:#2563eb;
-          --ok:#15803d; --warn:#b45309; --bad:#b91c1c; }
-  * { box-sizing:border-box; }
-  body { margin:0; font:14px/1.55 -apple-system,"Segoe UI",system-ui,sans-serif; background:var(--bg); color:var(--tx); }
-  header { background:#fff; border-bottom:1px solid var(--bd); padding:12px 24px; display:flex; gap:16px; align-items:center; flex-wrap:wrap; }
-  header h1 { font-size:17px; margin:0; font-weight:600; }
-  nav button { background:none; color:var(--mu); border:0; border-bottom:2px solid transparent; border-radius:0; padding:6px 10px; }
-  nav button.on { color:var(--ac); border-bottom-color:var(--ac); }
-  .pill { font-size:12px; padding:2px 10px; border-radius:999px; background:#e5e7eb; color:var(--mu); }
-  .pill.ok { background:#dcfce7; color:#166534; } .pill.off { background:#fee2e2; color:#991b1b; }
-  main { max-width:1040px; margin:0 auto; padding:20px; display:grid; gap:16px; }
-  .card { background:var(--card); border:1px solid var(--bd); border-radius:8px; padding:16px; }
-  .card h2 { font-size:15px; margin:0 0 10px; }
-  textarea, input[type=text], select { width:100%; font:13px ui-monospace,Consolas,monospace; border:1px solid var(--bd); border-radius:6px; padding:8px; background:#fff; color:var(--tx); }
-  textarea { min-height:120px; resize:vertical; }
-  button { background:var(--ac); color:#fff; border:0; border-radius:6px; padding:7px 13px; cursor:pointer; font-size:13px; }
-  button.sec { background:#e5e7eb; color:var(--tx); } button.go { background:var(--ok); } button.del { background:#fee2e2; color:#991b1b; }
-  button:disabled { opacity:.5; cursor:not-allowed; }
-  .row { display:flex; gap:8px; flex-wrap:wrap; align-items:center; margin-top:8px; }
-  .row > * { flex:0 0 auto; } .row select, .row input[type=text] { width:auto; min-width:160px; }
-  table { width:100%; border-collapse:collapse; font-size:13px; table-layout:fixed; }
-  th, td { text-align:left; padding:6px 8px; border-bottom:1px solid var(--bd); vertical-align:top; overflow:hidden; }
-  th { color:var(--mu); font-weight:600; }
-  #tests td:first-child { max-width:480px; word-break:break-all; }
-  #tests td:nth-child(2) { width:110px; white-space:nowrap; }
-  #tests td:nth-child(3) { width:220px; word-break:break-word; }
-  #tests td:last-child { width:120px; white-space:nowrap; }
-  .st { display:inline-block; padding:1px 9px; border-radius:999px; font-size:12px; font-weight:600; }
-  .st.passed { background:#dcfce7; color:#166534; } .st.failed { background:#fee2e2; color:#991b1b; } .st.skipped { background:#f3f4f6; color:#6b7280; }
-  .badge { display:inline-block; padding:2px 10px; border-radius:999px; font-weight:600; font-size:12px; color:#fff; }
-  .test_bug{background:#2563eb} .product_bug{background:var(--bad)} .env_infra{background:var(--warn)} .flaky_timeout{background:#7c3aed} .unknown{background:#6b7280}
-  .stats { display:flex; gap:12px; flex-wrap:wrap; margin:6px 0; }
-  .stat { border:1px solid var(--bd); border-radius:8px; padding:6px 14px; min-width:90px; text-align:center; background:#fafbfc; }
-  .stat b { display:block; font-size:20px; }
-  pre { background:#f3f4f6; color:#111827; border:1px solid var(--bd); padding:10px; border-radius:6px; overflow:auto; max-height:320px; font-size:12px; margin:6px 0; white-space:pre-wrap; }
-  pre .add { background:#dcfce7; } pre .del { background:#fee2e2; }
-  ul { margin:6px 0; padding-left:20px; }
-  .muted { color:var(--mu); } .err { color:var(--bad); margin-top:6px; }
-  .ask { border:1px dashed var(--warn); background:#fffbeb; border-radius:6px; padding:10px; margin-top:8px; }
-  .ask label { font-weight:600; display:block; margin-bottom:4px; }
-  .cap-banner { border:1px solid var(--warn); background:#fffbeb; border-radius:6px; padding:10px 14px; margin-top:8px; }
-  .cap-banner.exhausted { border-color:var(--bad); background:#fef2f2; }
-  .cap-banner p { margin:4px 0 8px; color:var(--mu); font-size:13px; }
-  .kbbox { border:1px solid #bbf7d0; background:#f0fdf4; border-radius:6px; padding:8px 10px; margin:8px 0; }
-  .bar { height:8px; background:#e5e7eb; border-radius:4px; overflow:hidden; width:140px; display:inline-block; vertical-align:middle; }
-  .bar > i { display:block; height:100%; background:var(--ac); }
-  .hidden { display:none; } .timeline span { display:inline-block; margin-right:10px; font-size:12px; }
+/* ── Design tokens ───────────────────────────────────────────── */
+:root {
+  --bg:       #0f1117;
+  --surface:  #1a1d27;
+  --surface2: #22263a;
+  --bd:       #2e3250;
+  --tx:       #e8eaf6;
+  --mu:       #8b92b8;
+  --ac:       #6366f1;
+  --ac2:      #818cf8;
+  --ok:       #22c55e;
+  --warn:     #f59e0b;
+  --bad:      #ef4444;
+  --ok-bg:    rgba(34,197,94,.12);
+  --warn-bg:  rgba(245,158,11,.12);
+  --bad-bg:   rgba(239,68,68,.12);
+  --ac-bg:    rgba(99,102,241,.15);
+  --radius:   10px;
+  --shadow:   0 4px 24px rgba(0,0,0,.35);
+  --font:     -apple-system,"Segoe UI",system-ui,sans-serif;
+  --mono:     ui-monospace,Consolas,"Cascadia Code",monospace;
+  --header-h: 60px;
+  --side-w:   220px;
+  --transition: .18s cubic-bezier(.4,0,.2,1);
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{height:100%}
+body{font:14px/1.6 var(--font);background:var(--bg);color:var(--tx);display:flex;flex-direction:column;min-height:100vh}
+
+/* ── Scrollbar ───────────────────────────────────────────────── */
+::-webkit-scrollbar{width:6px;height:6px}
+::-webkit-scrollbar-track{background:transparent}
+::-webkit-scrollbar-thumb{background:var(--bd);border-radius:3px}
+
+/* ── Header ──────────────────────────────────────────────────── */
+header{
+  height:var(--header-h);background:var(--surface);border-bottom:1px solid var(--bd);
+  display:flex;align-items:center;gap:14px;padding:0 24px;position:sticky;top:0;z-index:100;
+  box-shadow:0 2px 16px rgba(0,0,0,.4);
+}
+.logo{display:flex;align-items:center;gap:10px;text-decoration:none}
+.logo-icon{width:32px;height:32px;background:linear-gradient(135deg,var(--ac),#a78bfa);border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:17px;flex-shrink:0}
+.logo-text{font-size:15px;font-weight:700;color:var(--tx);letter-spacing:-.2px}
+.logo-sub{font-size:11px;color:var(--mu);margin-top:-2px}
+.h-pills{display:flex;gap:8px;margin-left:auto;align-items:center}
+.pill{
+  font-size:11px;font-weight:600;padding:3px 12px;border-radius:999px;
+  background:var(--surface2);color:var(--mu);border:1px solid var(--bd);
+  display:flex;align-items:center;gap:5px;transition:var(--transition);
+}
+.pill::before{content:'';width:7px;height:7px;border-radius:50%;background:var(--mu);flex-shrink:0}
+.pill.ok{background:var(--ok-bg);color:var(--ok);border-color:rgba(34,197,94,.3)}
+.pill.ok::before{background:var(--ok)}
+.pill.off{background:var(--bad-bg);color:var(--bad);border-color:rgba(239,68,68,.3)}
+.pill.off::before{background:var(--bad)}
+.pill.warn{background:var(--warn-bg);color:var(--warn);border-color:rgba(245,158,11,.3)}
+.pill.warn::before{background:var(--warn)}
+
+/* ── Layout ──────────────────────────────────────────────────── */
+.layout{display:flex;flex:1;overflow:hidden;height:calc(100vh - var(--header-h))}
+
+/* ── Sidebar ─────────────────────────────────────────────────── */
+aside{
+  width:var(--side-w);background:var(--surface);border-right:1px solid var(--bd);
+  display:flex;flex-direction:column;padding:16px 10px;gap:4px;flex-shrink:0;overflow-y:auto;
+}
+.nav-item{
+  display:flex;align-items:center;gap:10px;padding:9px 12px;border-radius:8px;
+  cursor:pointer;color:var(--mu);font-size:13px;font-weight:500;border:none;background:none;
+  transition:var(--transition);text-align:left;width:100%;
+}
+.nav-item:hover{background:var(--surface2);color:var(--tx)}
+.nav-item.on{background:var(--ac-bg);color:var(--ac2);border:1px solid rgba(99,102,241,.3)}
+.nav-item .nav-icon{font-size:16px;width:20px;text-align:center;flex-shrink:0}
+.nav-section{font-size:10px;font-weight:700;color:var(--mu);letter-spacing:.8px;padding:14px 12px 4px;text-transform:uppercase}
+
+/* ── Main content ────────────────────────────────────────────── */
+main{flex:1;overflow-y:auto;padding:24px;display:flex;flex-direction:column;gap:20px}
+.tab{display:none;flex-direction:column;gap:20px}
+.tab.on{display:flex}
+
+/* ── Page title ──────────────────────────────────────────────── */
+.page-title{font-size:20px;font-weight:700;color:var(--tx);display:flex;align-items:center;gap:10px}
+.page-title .icon{font-size:22px}
+.page-desc{font-size:13px;color:var(--mu);margin-top:2px}
+
+/* ── Cards ───────────────────────────────────────────────────── */
+.card{
+  background:var(--surface);border:1px solid var(--bd);border-radius:var(--radius);
+  padding:20px;box-shadow:var(--shadow);
+}
+.card-header{display:flex;align-items:center;gap:10px;margin-bottom:16px}
+.card-header h2{font-size:14px;font-weight:600;color:var(--tx)}
+.card-header .ch-icon{font-size:17px}
+.card-header .ch-badge{margin-left:auto;font-size:11px;color:var(--mu)}
+
+/* ── Form controls ───────────────────────────────────────────── */
+input[type=text],input[type=password],select,textarea{
+  width:100%;font:13px var(--mono);
+  background:var(--surface2);color:var(--tx);
+  border:1px solid var(--bd);border-radius:7px;padding:9px 12px;
+  transition:var(--transition);outline:none;
+}
+input[type=text]:focus,input[type=password]:focus,select:focus,textarea:focus{border-color:var(--ac);box-shadow:0 0 0 3px rgba(99,102,241,.18)}
+select option{background:var(--surface2)}
+textarea{min-height:130px;resize:vertical;font:13px var(--mono)}
+input[type=file]{color:var(--mu);font-size:13px}
+label{font-size:12px;font-weight:600;color:var(--mu);margin-bottom:4px;display:block}
+
+/* ── Buttons ─────────────────────────────────────────────────── */
+button{
+  font:13px/1 var(--font);font-weight:600;border:none;border-radius:7px;
+  padding:8px 16px;cursor:pointer;transition:var(--transition);display:inline-flex;align-items:center;gap:6px;
+}
+button:disabled{opacity:.4;cursor:not-allowed}
+.btn-primary{background:var(--ac);color:#fff}
+.btn-primary:hover:not(:disabled){background:var(--ac2);box-shadow:0 4px 16px rgba(99,102,241,.4)}
+.btn-secondary{background:var(--surface2);color:var(--tx);border:1px solid var(--bd)}
+.btn-secondary:hover:not(:disabled){background:var(--bd);color:var(--tx)}
+.btn-success{background:rgba(34,197,94,.18);color:var(--ok);border:1px solid rgba(34,197,94,.3)}
+.btn-success:hover:not(:disabled){background:rgba(34,197,94,.28)}
+.btn-danger{background:var(--bad-bg);color:var(--bad);border:1px solid rgba(239,68,68,.3)}
+.btn-danger:hover:not(:disabled){background:rgba(239,68,68,.22)}
+.btn-warn{background:var(--warn-bg);color:var(--warn);border:1px solid rgba(245,158,11,.3)}
+.btn-warn:hover:not(:disabled){background:rgba(245,158,11,.22)}
+.btn-sm{padding:5px 11px;font-size:12px;border-radius:6px}
+.btn-icon{padding:6px 10px;font-size:15px}
+
+/* ── Row ─────────────────────────────────────────────────────── */
+.row{display:flex;gap:10px;flex-wrap:wrap;align-items:flex-end;margin-top:12px}
+.row>*{flex:0 0 auto}
+.row select,.row input[type=text]{width:auto;min-width:150px}
+.field{display:flex;flex-direction:column;gap:4px}
+.field-grow{flex:1;min-width:200px}
+
+/* ── Tables ──────────────────────────────────────────────────── */
+.tbl-wrap{overflow-x:auto;border-radius:8px;border:1px solid var(--bd)}
+table{width:100%;border-collapse:collapse;font-size:13px}
+th,td{text-align:left;padding:10px 14px;border-bottom:1px solid var(--bd);vertical-align:top}
+tr:last-child td{border-bottom:none}
+th{color:var(--mu);font-weight:600;font-size:12px;background:var(--surface2);white-space:nowrap}
+tbody tr{transition:var(--transition)}
+tbody tr:hover{background:rgba(99,102,241,.05)}
+#tests td:first-child{max-width:40px}
+#tests td:nth-child(2){max-width:420px;word-break:break-all}
+#tests td:nth-child(3){width:120px;white-space:nowrap}
+#tests td:nth-child(4){width:240px;word-break:break-word}
+#tests td:last-child{width:130px;white-space:nowrap}
+
+/* ── Status badges ───────────────────────────────────────────── */
+.st{display:inline-flex;align-items:center;gap:4px;padding:3px 10px;border-radius:999px;font-size:11px;font-weight:700}
+.st::before{content:'';width:6px;height:6px;border-radius:50%;flex-shrink:0}
+.st.passed{background:var(--ok-bg);color:var(--ok)}.st.passed::before{background:var(--ok)}
+.st.failed{background:var(--bad-bg);color:var(--bad)}.st.failed::before{background:var(--bad)}
+.st.skipped{background:rgba(139,146,184,.15);color:var(--mu)}.st.skipped::before{background:var(--mu)}
+
+/* ── Category badges ─────────────────────────────────────────── */
+.badge{display:inline-block;padding:3px 11px;border-radius:999px;font-size:11px;font-weight:700;letter-spacing:.3px}
+.test_bug{background:rgba(99,102,241,.2);color:#a5b4fc;border:1px solid rgba(99,102,241,.4)}
+.product_bug{background:var(--bad-bg);color:#fca5a5;border:1px solid rgba(239,68,68,.4)}
+.env_infra{background:var(--warn-bg);color:#fcd34d;border:1px solid rgba(245,158,11,.4)}
+.flaky_timeout{background:rgba(167,139,250,.15);color:#c4b5fd;border:1px solid rgba(167,139,250,.4)}
+.unknown{background:rgba(139,146,184,.12);color:var(--mu);border:1px solid var(--bd)}
+
+/* ── Stats ───────────────────────────────────────────────────── */
+.stats{display:flex;gap:12px;flex-wrap:wrap;margin:8px 0 4px}
+.stat{
+  flex:1;min-width:90px;text-align:center;padding:14px 10px;
+  border:1px solid var(--bd);border-radius:var(--radius);background:var(--surface2);
+  position:relative;overflow:hidden;
+}
+.stat::before{content:'';position:absolute;top:0;left:0;right:0;height:3px;border-radius:var(--radius) var(--radius) 0 0}
+.stat.s-fail::before{background:var(--bad)}
+.stat.s-pass::before{background:var(--ok)}
+.stat.s-skip::before{background:var(--mu)}
+.stat.s-total::before{background:var(--ac)}
+.stat b{display:block;font-size:26px;font-weight:800;line-height:1.1;margin-bottom:2px}
+.stat b.c-fail{color:var(--bad)}.stat b.c-pass{color:var(--ok)}.stat b.c-skip{color:var(--mu)}.stat b.c-total{color:var(--ac2)}
+.stat span{font-size:11px;font-weight:600;color:var(--mu);text-transform:uppercase;letter-spacing:.5px}
+
+/* ── Confidence bar ──────────────────────────────────────────── */
+.conf-wrap{display:flex;align-items:center;gap:10px;margin:10px 0}
+.bar{height:8px;background:var(--surface2);border-radius:4px;overflow:hidden;width:160px;flex-shrink:0;border:1px solid var(--bd)}
+.bar>i{display:block;height:100%;background:linear-gradient(90deg,var(--ac),var(--ac2));border-radius:4px;transition:width .4s ease}
+.conf-pct{font-size:14px;font-weight:700;color:var(--ac2)}
+
+/* ── Diff ────────────────────────────────────────────────────── */
+pre{
+  background:var(--surface2);color:var(--tx);border:1px solid var(--bd);
+  padding:14px;border-radius:8px;overflow:auto;max-height:360px;
+  font:12px/1.6 var(--mono);margin:8px 0;white-space:pre-wrap;word-break:break-all;
+}
+pre .add{background:rgba(34,197,94,.18);color:#86efac;display:block}
+pre .del{background:rgba(239,68,68,.18);color:#fca5a5;display:block}
+pre .hdr{color:var(--ac2);display:block}
+
+/* ── Ask / info boxes ────────────────────────────────────────── */
+.ask{
+  border:1px solid rgba(245,158,11,.35);background:rgba(245,158,11,.07);
+  border-radius:var(--radius);padding:14px 16px;margin-top:12px;
+}
+.ask .ask-title{font-weight:700;color:var(--warn);font-size:13px;margin-bottom:6px;display:flex;align-items:center;gap:6px}
+.ask textarea{min-height:80px;margin-top:6px}
+.cap-banner{border:1px solid rgba(245,158,11,.35);background:rgba(245,158,11,.07);border-radius:var(--radius);padding:14px 16px;margin-top:12px}
+.cap-banner.exhausted{border-color:rgba(239,68,68,.35);background:rgba(239,68,68,.07)}
+.cap-banner b{color:var(--warn);font-size:13px}
+.cap-banner.exhausted b{color:var(--bad)}
+.cap-banner p{color:var(--mu);font-size:13px;margin:5px 0 10px}
+
+/* ── KB hints ────────────────────────────────────────────────── */
+.kbbox{border:1px solid rgba(34,197,94,.3);background:rgba(34,197,94,.07);border-radius:8px;padding:10px 14px;margin:10px 0;font-size:13px}
+.kbbox b{color:var(--ok)}
+
+/* ── Collapsible sections ────────────────────────────────────── */
+.collapsible-header{
+  display:flex;align-items:center;gap:8px;cursor:pointer;user-select:none;
+  padding:12px 0;border-bottom:1px solid var(--bd);
+}
+.collapsible-header:hover .ch-txt{color:var(--ac2)}
+.ch-arrow{font-size:11px;color:var(--mu);transition:var(--transition)}
+.ch-arrow.open{transform:rotate(90deg)}
+.ch-txt{font-size:14px;font-weight:600;color:var(--tx)}
+.ch-cnt{margin-left:auto;font-size:12px;color:var(--mu)}
+.collapsible-body{padding-top:12px}
+
+/* ── Timeline ────────────────────────────────────────────────── */
+.timeline{display:flex;flex-wrap:wrap;gap:8px;margin-top:8px}
+.tl-item{display:inline-flex;align-items:center;gap:5px;font-size:12px;color:var(--mu);background:var(--surface2);border:1px solid var(--bd);border-radius:6px;padding:3px 10px}
+
+/* ── Diagnosis detail rows ───────────────────────────────────── */
+.diag-row{display:flex;gap:8px;padding:8px 0;border-bottom:1px solid var(--bd);font-size:13px}
+.diag-row:last-child{border-bottom:none}
+.diag-label{color:var(--mu);font-weight:600;min-width:130px;flex-shrink:0}
+.diag-value{color:var(--tx)}
+ul.ev{padding-left:18px;margin:4px 0}
+ul.ev li{margin:4px 0;color:var(--tx);font-size:13px;line-height:1.5}
+
+/* ── Batch progress ──────────────────────────────────────────── */
+.batch-row{display:flex;align-items:center;gap:12px;padding:10px 0;flex-wrap:wrap}
+.batch-pbar{height:8px;background:var(--surface2);border-radius:4px;overflow:hidden;width:200px;border:1px solid var(--bd)}
+.batch-pbar>i{display:block;height:100%;background:linear-gradient(90deg,var(--ac),var(--ok));border-radius:4px;transition:width .3s ease}
+
+/* ── Rerun status ────────────────────────────────────────────── */
+.rerun-pass{background:var(--ok-bg);border:1px solid rgba(34,197,94,.3);color:var(--ok);border-radius:8px;padding:10px 14px;font-size:13px;font-weight:600;margin-top:8px}
+.rerun-fail{background:var(--bad-bg);border:1px solid rgba(239,68,68,.3);color:var(--bad);border-radius:8px;padding:10px 14px;font-size:13px;font-weight:600;margin-top:8px}
+
+/* ── Published ───────────────────────────────────────────────── */
+.pub-box{background:var(--ok-bg);border:1px solid rgba(34,197,94,.3);border-radius:8px;padding:12px 16px;margin-top:10px;font-size:13px}
+.pub-box a{color:var(--ok);font-weight:600}
+
+/* ── Misc ────────────────────────────────────────────────────── */
+.muted{color:var(--mu)}
+.err-msg{color:var(--bad);font-size:13px;margin-top:4px;padding:8px 12px;background:var(--bad-bg);border:1px solid rgba(239,68,68,.3);border-radius:7px}
+.hidden{display:none!important}
+.sep{height:1px;background:var(--bd);margin:14px 0}
+code{font:12px var(--mono);background:var(--surface2);padding:1px 6px;border-radius:4px;color:var(--ac2)}
+a{color:var(--ac2);text-decoration:none}
+a:hover{text-decoration:underline}
+.empty-state{text-align:center;padding:40px 20px;color:var(--mu);font-size:13px}
+.empty-state .ei{font-size:36px;margin-bottom:8px}
+.spinner{display:inline-block;width:14px;height:14px;border:2px solid var(--bd);border-top-color:var(--ac);border-radius:50%;animation:spin .7s linear infinite;vertical-align:middle}
+@keyframes spin{to{transform:rotate(360deg)}}
+.busy-txt{color:var(--mu);font-size:13px;display:flex;align-items:center;gap:7px}
+
+/* ── Global error bar ────────────────────────────────────────── */
+#err-bar{position:sticky;top:var(--header-h);z-index:90;padding:0 24px;background:transparent;pointer-events:none}
+#err-bar .err-msg{pointer-events:all;border-radius:0 0 8px 8px;border-top:none}
+
+/* ── Responsive ──────────────────────────────────────────────── */
+@media(max-width:768px){
+  aside{display:none}
+  .stats .stat{min-width:60px}
+  #tests td:nth-child(4){display:none}
+}
 </style>
 </head>
 <body>
+
+<!-- ══ HEADER ══════════════════════════════════════════════════ -->
 <header>
-  <h1>Log Analyser</h1>
-  <nav>
-    <button class="on" data-tab="analyse">Analyse</button>
-    <button data-tab="projects">Projects</button>
-    <button data-tab="kb">Knowledge base</button>
-  </nav>
-  <span class="pill" id="p-llm">llm</span>
-  <span class="pill" id="p-gh">github</span>
+  <a class="logo" href="#">
+    <div class="logo-icon">🔍</div>
+    <div>
+      <div class="logo-text">Log Analyser</div>
+      <div class="logo-sub">Failure triage · IBM</div>
+    </div>
+  </a>
+  <div class="h-pills">
+    <span class="pill" id="p-llm">LLM</span>
+    <span class="pill" id="p-gh">GitHub</span>
+    <span class="pill warn" id="p-busy" style="display:none"><span class="spinner"></span><span id="p-busy-txt">Working…</span></span>
+  </div>
 </header>
-<main>
-  <div id="err" class="err"></div>
 
-  <!-- ANALYSE -->
-  <div id="tab-analyse" style="display:grid;gap:16px">
-    <section class="card">
-      <h2>1. Upload a log</h2>
-      <div class="row" style="margin-top:0">
-        <label>Project <select id="sel-project"></select></label>
-        <input type="file" id="file">
-        <select id="sample"><option value="">Load a sample…</option></select>
-        <button id="btn-submit">Parse log</button>
-        <span id="busy" class="muted"></span>
-      </div>
-      <textarea id="log" placeholder="…or paste the log here (pytest, JUnit XML, Maven, Go, shell, any text)" style="margin-top:8px"></textarea>
-    </section>
+<!-- ══ GLOBAL ERROR ════════════════════════════════════════════ -->
+<div id="err-bar"><div id="err" class="err-msg hidden"></div></div>
 
-    <section class="card" id="uploads-card">
-      <h2 style="cursor:pointer;user-select:none" id="uploads-toggle"><span id="uploads-arrow">▶</span> Saved logs <span class="muted" id="uploads-count"></span></h2>
-      <div id="uploads-body" style="display:none;margin-top:6px">
-        <p class="muted" style="margin:0 0 6px">Files you've uploaded. Click <b>Use</b> to reload and parse. Capped at 20 files; oldest are removed automatically.</p>
-        <table style="table-layout:auto"><thead><tr><th>Name</th><th>Size</th><th></th></tr></thead><tbody id="uploads-rows"></tbody></table>
-      </div>
-    </section>
+<!-- ══ LAYOUT ══════════════════════════════════════════════════ -->
+<div class="layout">
 
-    <section class="card" id="recent-card">
-      <h2 style="cursor:pointer;user-select:none" id="recent-toggle"><span id="recent-arrow">▶</span> Recent runs <span class="muted" id="recent-count"></span></h2>
-      <div id="recent-body" style="display:none;margin-top:6px">
-        <p class="muted" style="margin:0 0 6px">Previously parsed logs. Click <b>Restore</b> to reload a run — already-analysed tests open instantly without an LLM call.</p>
-        <table style="table-layout:auto"><thead><tr><th>Log</th><th>Project</th><th>Format</th><th>Failed</th><th>Created</th><th></th></tr></thead><tbody id="recent-rows"></tbody></table>
-      </div>
-    </section>
+  <!-- ── Sidebar ────────────────────────────────────────────── -->
+  <aside>
+    <div class="nav-section">Workflow</div>
+    <button class="nav-item on" data-tab="analyse">
+      <span class="nav-icon">🔬</span> Analyse Logs
+    </button>
+    <div class="nav-section">Configuration</div>
+    <button class="nav-item" data-tab="projects">
+      <span class="nav-icon">📁</span> Projects
+    </button>
+    <button class="nav-item" data-tab="kb">
+      <span class="nav-icon">🧠</span> Knowledge Base
+    </button>
+  </aside>
 
-    <section class="card hidden" id="run-card">
-      <h2>2. Results <span class="muted" id="run-meta"></span></h2>
-      <div class="stats" id="stats"></div>
-      <div class="muted" id="run-note">Only failed tests are analysed. Skipped and passed tests are listed for reference.</div>
-      <table><thead><tr><th style="width:32px"><input type="checkbox" id="chk-all" title="Select all failed"></th><th>Test</th><th>Status</th><th>Detail</th><th></th></tr></thead><tbody id="tests"></tbody></table>
-      <div class="row" id="batch-bar" style="display:none;margin-top:10px;align-items:center;gap:10px">
-        <button id="btn-analyse-sel" class="go">Analyse selected (<span id="sel-count">0</span>)</button>
-        <button id="btn-stop-batch" class="sec" style="display:none">Stop</button>
-        <span id="batch-progress" class="muted"></span>
-        <div class="bar" id="batch-bar-fill" style="width:200px;display:none"><i id="batch-bar-i"></i></div>
-      </div>
-    </section>
+  <!-- ── Main ───────────────────────────────────────────────── -->
+  <main>
 
-    <section class="card hidden" id="case-card">
-      <h2>3. Diagnosis <span class="muted" id="c-name"></span></h2>
+    <!-- ════ TAB: ANALYSE ════════════════════════════════════ -->
+    <div id="tab-analyse" class="tab on">
+
       <div>
-        <span class="badge" id="r-cat"></span>
-        <span class="muted">confidence</span> <span class="bar"><i id="r-bar"></i></span> <b id="r-conf"></b>
-        <span class="pill" id="r-src"></span>
+        <div class="page-title"><span class="icon">🔬</span> Analyse Logs</div>
+        <div class="page-desc">Upload a log, parse test results, and diagnose failures with AI.</div>
       </div>
-      <div id="kbhints"></div>
-      <p id="r-summary"></p>
-      <div id="r-root"></div><div id="r-wait"></div><div id="r-comp"></div>
-      <h2 style="margin-top:12px">Evidence</h2><ul id="r-evidence"></ul>
-      <h2>Suggested next step</h2><p id="r-fix"></p>
-      <div class="timeline muted" id="r-history"></div>
-      <div id="ask" class="ask hidden">
-        <b>More information needed</b>
-        <p class="muted" style="margin:4px 0">Answer below (paste logs, command output, versions) and the analysis re-runs with your input.</p>
-        <div id="ask-fields"></div>
-        <button id="btn-info">Submit and re-analyse</button>
-      </div>
-      <div id="cap-banner" class="cap-banner hidden">
-        <b id="cap-title"></b>
-        <p id="cap-msg"></p>
-        <div class="row" style="margin-top:0">
-          <button id="btn-continue" class="sec">Continue 1 more round</button>
-          <button id="btn-issue-cap" class="sec">Draft issue instead</button>
+
+      <!-- 1. Upload -->
+      <div class="card">
+        <div class="card-header">
+          <span class="ch-icon">📤</span>
+          <h2>1 · Upload a log</h2>
+        </div>
+        <div class="row" style="margin-top:0;align-items:flex-end">
+          <div class="field">
+            <label>Project</label>
+            <select id="sel-project" style="min-width:160px"></select>
+          </div>
+          <div class="field">
+            <label>Load sample</label>
+            <select id="sample" style="min-width:180px"><option value="">Choose a sample log…</option></select>
+          </div>
+          <div class="field">
+            <label>Upload file</label>
+            <input type="file" id="file">
+          </div>
+          <button class="btn-primary" id="btn-submit">⚡ Parse log</button>
+        </div>
+        <div style="margin-top:12px">
+          <label>Or paste log text</label>
+          <textarea id="log" placeholder="Paste pytest, JUnit XML, Maven, Go, or any CI log here…"></textarea>
         </div>
       </div>
-      <div id="exhausted-banner" class="cap-banner exhausted hidden">
-        <b>&#x1F6D1; Analysis limit reached</b>
-        <p>All analysis rounds have been used. An issue has been auto-drafted for your review.</p>
-        <div class="row" style="margin-top:0">
-          <button id="btn-review-issue">Review issue draft</button>
+
+      <!-- Saved logs (collapsible) -->
+      <div class="card" id="uploads-card">
+        <div class="collapsible-header" id="uploads-toggle">
+          <span class="ch-arrow" id="uploads-arrow">▶</span>
+          <span class="ch-txt">💾 Saved logs</span>
+          <span class="ch-cnt" id="uploads-count"></span>
+        </div>
+        <div id="uploads-body" style="display:none">
+          <p class="muted" style="font-size:12px;margin-bottom:10px">Previously uploaded files. Click <b>Use</b> to reload and re-parse. Capped at 20 — oldest removed automatically.</p>
+          <div class="tbl-wrap">
+            <table style="table-layout:auto"><thead><tr><th>File name</th><th>Size</th><th>Actions</th></tr></thead><tbody id="uploads-rows"></tbody></table>
+          </div>
         </div>
       </div>
-      <div class="row">
-        <button id="btn-patch" class="sec">Generate patch</button>
-        <button id="btn-issue" class="sec">Draft GitHub issue</button>
-        <button id="btn-kb" class="sec">Save to knowledge base</button>
-      </div>
-      <div id="hint" class="muted"></div>
-    </section>
 
-    <section class="card hidden" id="patch-card">
-      <h2>4. Proposed patch <span class="muted" id="patch-src"></span></h2>
-      <pre id="patch"></pre>
-      <input type="text" id="patch-notes" placeholder="Optional guidance for regenerating the patch">
-      <div class="row"><button id="btn-patch2" class="sec">Regenerate</button></div>
-      <h2 style="margin-top:14px">5. Re-analyse after a run with this patch</h2>
-      <p class="muted" style="margin:0 0 6px">Apply the patch, rerun the test, then upload the new log. Passed: the fix is saved as verified. Failed: the new log is analysed together with this analysis.</p>
-      <div class="row" style="margin-top:0">
-        <input type="file" id="rerun-file">
-        <button id="btn-rerun" class="sec">Submit rerun log</button>
-        <button id="btn-pr" class="sec">Draft pull request</button>
+      <!-- Recent runs (collapsible) -->
+      <div class="card" id="recent-card">
+        <div class="collapsible-header" id="recent-toggle">
+          <span class="ch-arrow" id="recent-arrow">▶</span>
+          <span class="ch-txt">🕒 Recent runs</span>
+          <span class="ch-cnt" id="recent-count"></span>
+        </div>
+        <div id="recent-body" style="display:none">
+          <p class="muted" style="font-size:12px;margin-bottom:10px">Previously parsed logs. <b>Restore</b> to reload — already-analysed tests reopen without an LLM call.</p>
+          <div class="tbl-wrap">
+            <table style="table-layout:auto"><thead><tr><th>Log</th><th>Project</th><th>Format</th><th>Failed</th><th>Created (UTC)</th><th></th></tr></thead><tbody id="recent-rows"></tbody></table>
+          </div>
+        </div>
       </div>
-      <div id="rerun-status" style="margin-top:6px"></div>
-    </section>
 
-    <section class="card hidden" id="draft-card">
-      <h2 id="draft-title-h">Draft</h2>
-      <div id="dups" class="muted"></div>
-      <input type="text" id="draft-title">
-      <textarea id="draft-body" style="min-height:220px;margin-top:8px"></textarea>
-      <div class="row">
-        <button id="btn-save" class="sec">Save edits</button>
-        <button id="btn-publish" class="go">Approve and create</button>
+      <!-- 2. Results -->
+      <div class="card hidden" id="run-card">
+        <div class="card-header">
+          <span class="ch-icon">📊</span>
+          <h2>2 · Results</h2>
+          <span class="muted" id="run-meta" style="font-size:12px"></span>
+        </div>
+        <div class="stats" id="stats"></div>
+        <p class="muted" style="font-size:12px;margin:6px 0 10px">Only <b>failed</b> tests are analysed. Skipped and passed tests are listed for reference.</p>
+        <div class="tbl-wrap">
+          <table>
+            <thead><tr>
+              <th style="width:36px"><input type="checkbox" id="chk-all" title="Select all failed"></th>
+              <th>Test</th><th>Status</th><th>Detail</th><th>Action</th>
+            </tr></thead>
+            <tbody id="tests"></tbody>
+          </table>
+        </div>
+        <div class="batch-row hidden" id="batch-bar">
+          <button class="btn-success" id="btn-analyse-sel">⚡ Analyse selected (<span id="sel-count">0</span>)</button>
+          <button class="btn-secondary btn-sm" id="btn-stop-batch" style="display:none">⏹ Stop</button>
+          <span class="muted" id="batch-progress" style="font-size:12px"></span>
+          <div class="batch-pbar hidden" id="batch-pbar"><i id="batch-bar-i" style="width:0%"></i></div>
+        </div>
       </div>
-      <div id="published"></div>
-    </section>
-  </div>
 
-  <!-- PROJECTS -->
-  <div id="tab-projects" class="hidden" style="display:none;gap:16px">
-    <section class="card">
-      <h2>Registered projects</h2>
-      <table><thead><tr><th>Name</th><th>Path</th><th>Log format</th><th>GitHub repo</th><th></th></tr></thead><tbody id="proj-rows"></tbody></table>
-    </section>
-    <section class="card">
-      <h2>Add a project</h2>
-      <p class="muted" style="margin-top:0">The repository must be a directory inside the projects root mounted in the container.</p>
-      <div class="row" style="margin-top:0">
-        <input type="text" id="np-name" placeholder="name (e.g. ocs-ci)">
-        <select id="np-path"></select>
-        <select id="np-fmt"></select>
-        <input type="text" id="np-gh" placeholder="GitHub owner/name">
-      </div>
-      <input type="text" id="np-hint" placeholder="Optional domain hint for the analyser" style="margin-top:8px">
-      <div class="row"><button id="btn-addproj">Add project</button></div>
-    </section>
-    <section class="card">
-      <h2>Clone from Git URL</h2>
-      <p class="muted" style="margin-top:0">Clones the repository into the projects root on the server, then registers it. Requires <code>git</code> to be installed and the projects folder to be writable.</p>
-      <div class="row" style="margin-top:0">
-        <input type="text" id="cl-url" placeholder="https://github.com/owner/repo.git" style="min-width:300px;flex:1">
-        <input type="text" id="cl-name" placeholder="name (auto-derived if blank)">
-      </div>
-      <div class="row" style="margin-top:8px">
-        <select id="cl-fmt"></select>
-        <input type="text" id="cl-gh" placeholder="GitHub owner/name (for issues/PRs)">
-      </div>
-      <input type="text" id="cl-hint" placeholder="Optional domain hint for the analyser" style="margin-top:8px">
-      <div class="row" style="margin-top:8px;align-items:center">
-        <input type="password" id="cl-token" placeholder="Token / password (https only, never stored)" style="min-width:260px">
-        <span class="muted" style="font-size:12px">Injected into the clone URL only; not saved anywhere.</span>
-      </div>
-      <div class="row"><button id="btn-clone" class="go">Clone and add</button><span id="clone-busy" class="muted"></span></div>
-      <div id="clone-err" class="err"></div>
-    </section>
-  </div>
+      <!-- 3. Diagnosis -->
+      <div class="card hidden" id="case-card">
+        <div class="card-header">
+          <span class="ch-icon">🩺</span>
+          <h2>3 · Diagnosis</h2>
+          <span class="muted" id="c-name" style="font-size:12px"></span>
+          <span class="pill" id="r-src" style="margin-left:auto"></span>
+        </div>
 
-  <!-- KB -->
-  <div id="tab-kb" style="display:none;gap:16px">
-    <section class="card">
-      <h2>Knowledge base <span class="muted">(known problem → fix; verified entries are reused without an LLM call)</span></h2>
-      <table><thead><tr><th>Project</th><th>Problem</th><th>Fix</th><th>Status</th><th>Hits</th><th></th></tr></thead><tbody id="kb-rows"></tbody></table>
-    </section>
-  </div>
-</main>
+        <div style="display:flex;align-items:center;gap:14px;flex-wrap:wrap;margin-bottom:12px">
+          <span class="badge" id="r-cat"></span>
+          <div class="conf-wrap" style="margin:0">
+            <span class="muted" style="font-size:12px">Confidence</span>
+            <div class="bar"><i id="r-bar"></i></div>
+            <b class="conf-pct" id="r-conf"></b>
+          </div>
+        </div>
+
+        <div id="kbhints"></div>
+
+        <div id="diag-details">
+          <div class="diag-row" id="row-summary"><span class="diag-label">Summary</span><span class="diag-value" id="r-summary"></span></div>
+          <div class="diag-row" id="row-root"><span class="diag-label">Root cause</span><span class="diag-value" id="r-root"></span></div>
+          <div class="diag-row" id="row-wait"><span class="diag-label">Was waiting on</span><span class="diag-value" id="r-wait"></span></div>
+          <div class="diag-row" id="row-comp"><span class="diag-label">Component</span><span class="diag-value" id="r-comp"></span></div>
+          <div class="diag-row">
+            <span class="diag-label">Evidence</span>
+            <ul class="ev" id="r-evidence"></ul>
+          </div>
+          <div class="diag-row">
+            <span class="diag-label">Suggested fix</span>
+            <span class="diag-value" id="r-fix"></span>
+          </div>
+        </div>
+
+        <div style="margin-top:10px">
+          <span class="muted" style="font-size:12px;font-weight:600">Analysis history</span>
+          <div class="timeline" id="r-history"></div>
+        </div>
+
+        <!-- Ask / Q&A -->
+        <div id="ask" class="ask hidden">
+          <div class="ask-title">💬 More information needed</div>
+          <p class="muted" style="font-size:12px;margin-bottom:8px">Answer the questions below (paste logs, versions, command output) — the analysis re-runs with your input.</p>
+          <div id="ask-fields"></div>
+          <div class="row" style="margin-top:10px">
+            <button class="btn-primary" id="btn-info">↩ Submit and re-analyse</button>
+          </div>
+        </div>
+
+        <!-- Soft cap banner -->
+        <div id="cap-banner" class="cap-banner hidden">
+          <b id="cap-title"></b>
+          <p id="cap-msg"></p>
+          <div class="row" style="margin-top:0">
+            <button class="btn-warn btn-sm" id="btn-continue">➕ Continue 1 more round</button>
+            <button class="btn-secondary btn-sm" id="btn-issue-cap">📋 Draft issue instead</button>
+          </div>
+        </div>
+
+        <!-- Hard cap banner -->
+        <div id="exhausted-banner" class="cap-banner exhausted hidden">
+          <b>🛑 Analysis limit reached</b>
+          <p>All analysis rounds have been used. An issue has been auto-drafted for your review.</p>
+          <div class="row" style="margin-top:0">
+            <button class="btn-primary btn-sm" id="btn-review-issue">📋 Review issue draft</button>
+          </div>
+        </div>
+
+        <div class="sep"></div>
+        <div class="row" style="margin-top:0">
+          <button class="btn-secondary" id="btn-patch">🔧 Generate patch</button>
+          <button class="btn-secondary" id="btn-issue">📋 Draft GitHub issue</button>
+          <button class="btn-secondary" id="btn-kb">🧠 Save to knowledge base</button>
+        </div>
+        <div id="hint" class="muted" style="font-size:12px;margin-top:8px"></div>
+      </div>
+
+      <!-- 4. Patch -->
+      <div class="card hidden" id="patch-card">
+        <div class="card-header">
+          <span class="ch-icon">🔧</span>
+          <h2>4 · Proposed patch</h2>
+          <span class="muted" id="patch-src" style="font-size:12px"></span>
+        </div>
+        <pre id="patch"></pre>
+        <div style="margin-top:10px">
+          <label>Optional guidance for regenerating</label>
+          <input type="text" id="patch-notes" placeholder="e.g. keep the existing validation logic">
+        </div>
+        <div class="row"><button class="btn-secondary" id="btn-patch2">↩ Regenerate patch</button></div>
+
+        <div class="sep"></div>
+        <div class="card-header" style="margin-bottom:8px">
+          <span class="ch-icon">🔄</span>
+          <h2>5 · Re-analyse after a rerun</h2>
+        </div>
+        <p class="muted" style="font-size:12px;margin-bottom:10px">Apply the patch, rerun the test, then upload the new log. If it passes the fix is saved as verified.</p>
+        <div class="row" style="margin-top:0">
+          <input type="file" id="rerun-file">
+          <button class="btn-secondary" id="btn-rerun">📤 Submit rerun log</button>
+          <button class="btn-secondary" id="btn-pr">🔀 Draft pull request</button>
+        </div>
+        <div id="rerun-status"></div>
+      </div>
+
+      <!-- Draft / Publish -->
+      <div class="card hidden" id="draft-card">
+        <div class="card-header">
+          <span class="ch-icon">📝</span>
+          <h2 id="draft-title-h">Draft</h2>
+        </div>
+        <div id="dups" class="muted" style="font-size:12px;margin-bottom:8px"></div>
+        <div class="field" style="margin-bottom:10px">
+          <label>Title</label>
+          <input type="text" id="draft-title">
+        </div>
+        <div class="field">
+          <label>Body</label>
+          <textarea id="draft-body" style="min-height:240px"></textarea>
+        </div>
+        <div class="row">
+          <button class="btn-secondary" id="btn-save">💾 Save edits</button>
+          <button class="btn-success" id="btn-publish">✅ Approve and create on GitHub</button>
+        </div>
+        <div id="published"></div>
+      </div>
+
+    </div><!-- /tab-analyse -->
+
+
+    <!-- ════ TAB: PROJECTS ═══════════════════════════════════ -->
+    <div id="tab-projects" class="tab">
+
+      <div>
+        <div class="page-title"><span class="icon">📁</span> Projects</div>
+        <div class="page-desc">Register repositories for source-aware analysis and patch generation.</div>
+      </div>
+
+      <!-- Registered -->
+      <div class="card">
+        <div class="card-header"><span class="ch-icon">📋</span><h2>Registered projects</h2></div>
+        <div class="tbl-wrap">
+          <table>
+            <thead><tr><th>Name</th><th>Path</th><th>Log format</th><th>GitHub repo</th><th></th></tr></thead>
+            <tbody id="proj-rows"></tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- Add -->
+      <div class="card">
+        <div class="card-header"><span class="ch-icon">➕</span><h2>Add a project</h2></div>
+        <p class="muted" style="font-size:12px;margin-bottom:12px">The repository must be a directory inside the projects root mounted in the container.</p>
+        <div class="row" style="margin-top:0">
+          <div class="field field-grow"><label>Name</label><input type="text" id="np-name" placeholder="e.g. ocs-ci"></div>
+          <div class="field"><label>Path</label><select id="np-path"></select></div>
+          <div class="field"><label>Log format</label><select id="np-fmt"></select></div>
+          <div class="field field-grow"><label>GitHub repo</label><input type="text" id="np-gh" placeholder="owner/name"></div>
+        </div>
+        <div class="field" style="margin-top:10px">
+          <label>Domain hint (optional)</label>
+          <input type="text" id="np-hint" placeholder="e.g. Kubernetes storage operator">
+        </div>
+        <div class="row"><button class="btn-primary" id="btn-addproj">➕ Add project</button></div>
+      </div>
+
+      <!-- Clone -->
+      <div class="card">
+        <div class="card-header"><span class="ch-icon">⬇️</span><h2>Clone from Git URL</h2></div>
+        <p class="muted" style="font-size:12px;margin-bottom:12px">Clones the repo into the projects root, then registers it. Requires <code>git</code> and a writable projects folder.</p>
+        <div class="row" style="margin-top:0">
+          <div class="field field-grow"><label>Git URL</label><input type="text" id="cl-url" placeholder="https://github.com/owner/repo.git"></div>
+          <div class="field field-grow"><label>Name (auto-derived if blank)</label><input type="text" id="cl-name" placeholder="optional"></div>
+        </div>
+        <div class="row">
+          <div class="field"><label>Log format</label><select id="cl-fmt"></select></div>
+          <div class="field field-grow"><label>GitHub repo (for issues/PRs)</label><input type="text" id="cl-gh" placeholder="owner/name"></div>
+        </div>
+        <div class="field" style="margin-top:10px">
+          <label>Domain hint (optional)</label>
+          <input type="text" id="cl-hint" placeholder="e.g. Java payments microservice">
+        </div>
+        <div class="row">
+          <div class="field field-grow">
+            <label>Token / password <span class="muted">(injected into clone URL only — never stored)</span></label>
+            <input type="password" id="cl-token" placeholder="ghp_xxxxx or personal access token">
+          </div>
+        </div>
+        <div class="row">
+          <button class="btn-success" id="btn-clone">⬇️ Clone and add</button>
+          <span class="muted" id="clone-busy" style="font-size:12px"></span>
+        </div>
+        <div id="clone-err" class="err-msg hidden" style="margin-top:8px"></div>
+      </div>
+
+    </div><!-- /tab-projects -->
+
+
+    <!-- ════ TAB: KNOWLEDGE BASE ════════════════════════════ -->
+    <div id="tab-kb" class="tab">
+
+      <div>
+        <div class="page-title"><span class="icon">🧠</span> Knowledge Base</div>
+        <div class="page-desc">Verified fixes are reused automatically — no LLM call needed when similarity is high.</div>
+      </div>
+
+      <div class="card">
+        <div class="card-header"><span class="ch-icon">📚</span><h2>Known problems &amp; fixes</h2></div>
+        <div class="tbl-wrap">
+          <table>
+            <thead><tr><th>Project</th><th>Problem</th><th>Fix</th><th>Status</th><th>Hits</th><th></th></tr></thead>
+            <tbody id="kb-rows"></tbody>
+          </table>
+        </div>
+      </div>
+
+    </div><!-- /tab-kb -->
+
+  </main>
+</div><!-- /layout -->
 
 <script>
-const $ = (id) => document.getElementById(id);
+/* ── Helpers ───────────────────────────────────────────────── */
+const $ = id => document.getElementById(id);
 const el = (tag, text, cls) => { const n = document.createElement(tag); if (text !== undefined) n.textContent = text; if (cls) n.className = cls; return n; };
 let run = null, current = null, draftKind = null, samples = [];
 
@@ -243,80 +651,103 @@ async function api(method, url, body) {
   if (!resp.ok) throw new Error(data.error || ("HTTP " + resp.status));
   return data;
 }
-function busy(msg) { $("busy").textContent = msg || ""; document.querySelectorAll("button").forEach(b => { if (msg) { b.dataset.was = b.disabled ? "1" : ""; b.disabled = true; } else if (b.dataset.was !== undefined) { b.disabled = b.dataset.was === "1"; delete b.dataset.was; } }); }
-function showErr(e) { $("err").textContent = e ? (e.message || String(e)) : ""; }
-async function act(label, fn) { showErr(null); busy(label); try { await fn(); } catch (e) { showErr(e); } finally { busy(""); if (current) renderCase(current); } }
 
-/* tabs */
-document.querySelectorAll("nav button").forEach(b => b.onclick = () => {
-  document.querySelectorAll("nav button").forEach(x => x.classList.toggle("on", x === b));
-  ["analyse", "projects", "kb"].forEach(t => $("tab-" + t).style.display = t === b.dataset.tab ? "grid" : "none");
+function busy(msg) {
+  const bar = $("p-busy"), txt = $("p-busy-txt");
+  if (msg) { bar.style.display = "flex"; txt.textContent = msg; }
+  else bar.style.display = "none";
+  document.querySelectorAll("button").forEach(b => {
+    if (msg) { b.dataset.was = b.disabled ? "1" : ""; b.disabled = true; }
+    else if (b.dataset.was !== undefined) { b.disabled = b.dataset.was === "1"; delete b.dataset.was; }
+  });
+}
+
+function showErr(e) {
+  const el = $("err");
+  if (e) { el.textContent = e.message || String(e); el.classList.remove("hidden"); }
+  else el.classList.add("hidden");
+}
+
+async function act(label, fn) {
+  showErr(null); busy(label);
+  try { await fn(); } catch (e) { showErr(e); }
+  finally { busy(""); if (current) renderCase(current); }
+}
+
+/* ── Tabs ──────────────────────────────────────────────────── */
+document.querySelectorAll(".nav-item").forEach(b => b.onclick = () => {
+  document.querySelectorAll(".nav-item").forEach(x => x.classList.toggle("on", x === b));
+  ["analyse","projects","kb"].forEach(t => {
+    const tab = $("tab-" + t);
+    tab.classList.toggle("on", t === b.dataset.tab);
+  });
   if (b.dataset.tab === "projects") loadProjects();
   if (b.dataset.tab === "kb") loadKb();
 });
 
-/* uploads */
+/* ── Uploads ───────────────────────────────────────────────── */
 async function loadUploads() {
   const list = await api("GET", "/api/uploads");
   const rows = $("uploads-rows"); rows.replaceChildren();
-  $("uploads-count").textContent = list.length ? "(" + list.length + ")" : "";
+  $("uploads-count").textContent = list.length ? list.length + " file" + (list.length !== 1 ? "s" : "") : "";
+  if (!list.length) { const tr = el("tr"); const td = el("td"); td.colSpan = 3; td.innerHTML = '<div class="empty-state"><div class="ei">📂</div>No saved logs yet</div>'; tr.appendChild(td); rows.appendChild(tr); return; }
   list.forEach(u => {
     const tr = el("tr");
     tr.appendChild(el("td", u.name));
     tr.appendChild(el("td", (u.size / 1024).toFixed(1) + " KB", "muted"));
     const td = el("td");
-    const useBtn = el("button", "Use", "sec"); useBtn.style.marginRight = "6px";
+    const useBtn = el("button", "Use", "btn-secondary btn-sm"); useBtn.style.marginRight = "6px";
     useBtn.onclick = () => act("Loading…", async () => {
       const data = await api("GET", "/api/uploads/" + encodeURIComponent(u.name));
       $("log").value = data.text.slice(0, 200000); $("file").value = "";
-      const project = $("sel-project").value;
-      const r = await api("POST", "/api/runs", { project, log: data.text, name: data.name });
+      const r = await api("POST", "/api/runs", { project: $("sel-project").value, log: data.text, name: data.name });
       current = null; $("case-card").classList.add("hidden"); $("patch-card").classList.add("hidden"); $("draft-card").classList.add("hidden"); renderRun(r);
     });
-    const delBtn = el("button", "Delete", "del");
+    const delBtn = el("button", "Delete", "btn-danger btn-sm");
     delBtn.onclick = () => act("", async () => { await api("DELETE", "/api/uploads/" + encodeURIComponent(u.name)); await loadUploads(); });
     td.append(useBtn, delBtn); tr.appendChild(td); rows.appendChild(tr);
   });
 }
 $("uploads-toggle").onclick = () => {
-  const body = $("uploads-body"), open = body.style.display !== "none";
+  const body = $("uploads-body"), arrow = $("uploads-arrow"), open = body.style.display !== "none";
   body.style.display = open ? "none" : "block";
-  $("uploads-arrow").textContent = open ? "▶" : "▼";
+  arrow.textContent = open ? "▶" : "▼"; arrow.classList.toggle("open", !open);
   if (!open) loadUploads();
 };
 
-/* recent runs */
+/* ── Recent runs ───────────────────────────────────────────── */
 async function loadRecentRuns() {
   const list = await api("GET", "/api/runs");
   const rows = $("recent-rows"); rows.replaceChildren();
   const recent = list.slice(0, 10);
-  $("recent-count").textContent = recent.length ? "(" + recent.length + ")" : "";
+  $("recent-count").textContent = recent.length ? recent.length + " run" + (recent.length !== 1 ? "s" : "") : "";
+  if (!recent.length) { const tr = el("tr"); const td = el("td"); td.colSpan = 6; td.innerHTML = '<div class="empty-state"><div class="ei">📋</div>No recent runs</div>'; tr.appendChild(td); rows.appendChild(tr); return; }
   recent.forEach(r => {
-    const analysed = r.counts.failed > 0 ? "" : "";
     const tr = el("tr");
     tr.appendChild(el("td", r.name));
     tr.appendChild(el("td", r.project || "—", "muted"));
     tr.appendChild(el("td", r.format, "muted"));
-    tr.appendChild(el("td", String(r.counts.failed)));
-    tr.appendChild(el("td", r.created.replace("T", " ").replace("+00:00","") + " UTC", "muted"));
+    const failTd = el("td");
+    if (r.counts.failed > 0) { failTd.appendChild(el("span", String(r.counts.failed), "st failed")); } else failTd.textContent = "0";
+    tr.appendChild(failTd);
+    tr.appendChild(el("td", r.created.replace("T"," ").replace("+00:00",""), "muted"));
     const td = el("td");
-    const restoreBtn = el("button", "Restore", "sec");
-    restoreBtn.onclick = () => act("Restoring…", async () => {
+    const btn = el("button", "Restore", "btn-secondary btn-sm");
+    btn.onclick = () => act("Restoring…", async () => {
       const full = await api("GET", "/api/runs/" + r.id);
-      current = null; $("case-card").classList.add("hidden"); $("patch-card").classList.add("hidden"); $("draft-card").classList.add("hidden");
-      renderRun(full);
+      current = null; $("case-card").classList.add("hidden"); $("patch-card").classList.add("hidden"); $("draft-card").classList.add("hidden"); renderRun(full);
     });
-    td.appendChild(restoreBtn); tr.appendChild(td); rows.appendChild(tr);
+    td.appendChild(btn); tr.appendChild(td); rows.appendChild(tr);
   });
 }
 $("recent-toggle").onclick = () => {
-  const body = $("recent-body"), open = body.style.display !== "none";
+  const body = $("recent-body"), arrow = $("recent-arrow"), open = body.style.display !== "none";
   body.style.display = open ? "none" : "block";
-  $("recent-arrow").textContent = open ? "▶" : "▼";
+  arrow.textContent = open ? "▶" : "▼"; arrow.classList.toggle("open", !open);
   if (!open) loadRecentRuns();
 };
 
-/* projects */
+/* ── Projects ──────────────────────────────────────────────── */
 async function loadProjects() {
   const list = await api("GET", "/api/projects");
   const sel = $("sel-project"), prev = sel.value; sel.replaceChildren();
@@ -324,11 +755,19 @@ async function loadProjects() {
   list.forEach(p => { const o = el("option", p.name + (p.available ? "" : " (repo missing)")); o.value = p.name; sel.appendChild(o); });
   if (prev) sel.value = prev;
   const rows = $("proj-rows"); rows.replaceChildren();
+  if (!list.length) { const tr = el("tr"); const td = el("td"); td.colSpan = 5; td.innerHTML = '<div class="empty-state"><div class="ei">📁</div>No projects registered yet</div>'; tr.appendChild(td); rows.appendChild(tr); }
   list.forEach(p => {
-    const tr = el("tr"); [p.name, p.path + (p.available ? "" : " (missing)"), p.log_format, p.github_repo || "-"].forEach(v => tr.appendChild(el("td", v)));
-    const td = el("td"); const del = el("button", "Remove", "del"); del.onclick = () => act("", async () => { await api("DELETE", "/api/projects/" + encodeURIComponent(p.name)); await loadProjects(); }); td.appendChild(del); tr.appendChild(td); rows.appendChild(tr);
+    const tr = el("tr");
+    const nameTd = el("td"); nameTd.appendChild(el("b", p.name)); tr.appendChild(nameTd);
+    tr.appendChild(el("td", p.path + (p.available ? "" : " ⚠ missing"), p.available ? "" : "muted"));
+    tr.appendChild(el("td", p.log_format));
+    tr.appendChild(el("td", p.github_repo || "—", "muted"));
+    const td = el("td"); const del = el("button", "Remove", "btn-danger btn-sm");
+    del.onclick = () => act("", async () => { await api("DELETE", "/api/projects/" + encodeURIComponent(p.name)); await loadProjects(); });
+    td.appendChild(del); tr.appendChild(td); rows.appendChild(tr);
   });
   const avail = await api("GET", "/api/projects/available"); $("np-path").replaceChildren();
+  if (!avail.length) { const o = el("option", "(no dirs in projects root)"); o.value = ""; $("np-path").appendChild(o); }
   avail.forEach(n => { const o = el("option", n); o.value = n; $("np-path").appendChild(o); });
 }
 $("btn-addproj").onclick = () => act("Adding…", async () => {
@@ -336,43 +775,43 @@ $("btn-addproj").onclick = () => act("Adding…", async () => {
   $("np-name").value = ""; $("np-gh").value = ""; $("np-hint").value = ""; await loadProjects();
 });
 $("btn-clone").onclick = async () => {
-  $("clone-err").textContent = "";
+  $("clone-err").classList.add("hidden");
   const url = $("cl-url").value.trim();
-  if (!url) { $("clone-err").textContent = "Git URL is required."; return; }
-  $("btn-clone").disabled = true; $("clone-busy").textContent = "Cloning… (may take up to 2 min)";
+  if (!url) { $("clone-err").textContent = "Git URL is required."; $("clone-err").classList.remove("hidden"); return; }
+  $("btn-clone").disabled = true; $("clone-busy").textContent = "⏳ Cloning… (may take up to 2 min)";
   try {
-    await api("POST", "/api/projects/clone", {
-      git_url: url, name: $("cl-name").value.trim(),
-      token: $("cl-token").value,
-      log_format: $("cl-fmt").value,
-      github_repo: $("cl-gh").value.trim(),
-      domain_hint: $("cl-hint").value.trim(),
-    });
-    $("cl-url").value = ""; $("cl-name").value = ""; $("cl-token").value = "";
-    $("cl-gh").value = ""; $("cl-hint").value = "";
+    await api("POST", "/api/projects/clone", { git_url: url, name: $("cl-name").value.trim(), token: $("cl-token").value, log_format: $("cl-fmt").value, github_repo: $("cl-gh").value.trim(), domain_hint: $("cl-hint").value.trim() });
+    $("cl-url").value = ""; $("cl-name").value = ""; $("cl-token").value = ""; $("cl-gh").value = ""; $("cl-hint").value = "";
     await loadProjects();
-  } catch (e) {
-    $("clone-err").textContent = e.message || String(e);
-  } finally {
-    $("btn-clone").disabled = false; $("clone-busy").textContent = "";
-  }
+  } catch (e) { $("clone-err").textContent = e.message || String(e); $("clone-err").classList.remove("hidden"); }
+  finally { $("btn-clone").disabled = false; $("clone-busy").textContent = ""; }
 };
 
-/* knowledge base */
+/* ── KB ────────────────────────────────────────────────────── */
 async function loadKb() {
+  const list = await api("GET", "/api/kb");
   const rows = $("kb-rows"); rows.replaceChildren();
-  (await api("GET", "/api/kb")).forEach(k => {
+  if (!list.length) { const tr = el("tr"); const td = el("td"); td.colSpan = 6; td.innerHTML = '<div class="empty-state"><div class="ei">🧠</div>Knowledge base is empty — verified fixes will appear here</div>'; tr.appendChild(td); rows.appendChild(tr); return; }
+  list.forEach(k => {
     const tr = el("tr");
-    [k.project, k.problem, k.fix_text || "-", k.status + (k.patch_blocks.length ? " (patch)" : ""), String(k.hits)].forEach(v => tr.appendChild(el("td", v)));
-    const td = el("td"); const del = el("button", "Delete", "del"); del.onclick = () => act("", async () => { await api("DELETE", "/api/kb/" + k.id); await loadKb(); }); td.appendChild(del); tr.appendChild(td); rows.appendChild(tr);
+    const projTd = el("td"); projTd.appendChild(el("code", k.project)); tr.appendChild(projTd);
+    tr.appendChild(el("td", k.problem));
+    tr.appendChild(el("td", k.fix_text || "—", "muted"));
+    const stTd = el("td");
+    const sBadge = el("span", k.status + (k.patch_blocks.length ? " + patch" : ""), k.status === "verified" ? "st passed" : k.status === "open_issue" ? "st failed" : "st skipped");
+    stTd.appendChild(sBadge); tr.appendChild(stTd);
+    tr.appendChild(el("td", String(k.hits)));
+    const td = el("td"); const del = el("button", "Delete", "btn-danger btn-sm");
+    del.onclick = () => act("", async () => { await api("DELETE", "/api/kb/" + k.id); await loadKb(); });
+    td.appendChild(del); tr.appendChild(td); rows.appendChild(tr);
   });
 }
 
-/* run results */
+/* ── Run results ───────────────────────────────────────────── */
 function updateSelCount() {
   const checked = document.querySelectorAll("#tests input.chk-test:checked").length;
   $("sel-count").textContent = checked;
-  $("batch-bar").style.display = checked > 0 ? "flex" : "none";
+  $("batch-bar").classList.toggle("hidden", checked === 0);
   const failTotal = document.querySelectorAll("#tests input.chk-test").length;
   $("chk-all").indeterminate = checked > 0 && checked < failTotal;
   $("chk-all").checked = failTotal > 0 && checked === failTotal;
@@ -380,16 +819,20 @@ function updateSelCount() {
 
 function renderRun(r) {
   run = r; $("run-card").classList.remove("hidden");
-  $("run-meta").textContent = " · " + r.name + " · format: " + r.format;
+  $("run-meta").textContent = "· " + r.name + "  ·  format: " + r.format;
   const s = $("stats"); s.replaceChildren();
-  [["passed", r.counts.passed], ["failed", r.counts.failed], ["skipped", r.counts.skipped], ["total", r.counts.total]].forEach(([k, v]) => { const d = el("div", undefined, "stat"); d.append(el("b", String(v)), el("span", k, "muted")); s.appendChild(d); });
+  const defs = [["passed","c-pass","s-pass"],["failed","c-fail","s-fail"],["skipped","c-skip","s-skip"],["total","c-total","s-total"]];
+  defs.forEach(([k, cc, sc]) => {
+    const d = el("div", undefined, "stat " + sc);
+    d.append(el("b", String(r.counts[k]), cc), el("span", k, "muted"));
+    s.appendChild(d);
+  });
   const body = $("tests"); body.replaceChildren();
-  $("batch-bar").style.display = "none"; $("batch-progress").textContent = "";
-  $("batch-bar-fill").style.display = "none"; $("btn-stop-batch").style.display = "none";
+  $("batch-bar").classList.add("hidden"); $("batch-progress").textContent = "";
+  $("batch-pbar").classList.add("hidden"); $("btn-stop-batch").style.display = "none";
   const order = { failed: 0, passed: 1, skipped: 2 };
   [...r.tests].sort((a, b) => order[a.status] - order[b.status]).slice(0, 300).forEach(t => {
     const tr = el("tr"); tr.dataset.testId = t.id;
-    // checkbox cell — only for unanalysed failed tests
     const chk_td = el("td");
     if (t.status === "failed" && !t.case_id) {
       const chk = document.createElement("input"); chk.type = "checkbox"; chk.className = "chk-test"; chk.dataset.testId = t.id;
@@ -401,11 +844,10 @@ function renderRun(r) {
     tr.appendChild(el("td", t.reason || ""));
     const act_td = el("td");
     if (t.status === "failed") {
-      const b = el("button", t.case_id ? "Open analysis" : "Analyse", "sec");
+      const b = el("button", t.case_id ? "Open analysis" : "Analyse", "btn-secondary btn-sm");
       b.onclick = () => act("Analysing…", async () => {
         current = await api("POST", "/api/runs/" + r.id + "/analyse", { test_id: t.id });
         t.case_id = current.id;
-        // remove checkbox once analysed, refresh count
         const chk = tr.querySelector("input.chk-test"); if (chk) { chk.checked = false; chk.remove(); }
         b.textContent = "Open analysis"; updateSelCount();
       });
@@ -413,17 +855,13 @@ function renderRun(r) {
     }
     tr.appendChild(act_td); body.appendChild(tr);
   });
-  if (r.tests.length > 300) body.appendChild(el("tr")).appendChild(el("td", "…and " + (r.tests.length - 300) + " more (use the API for the full list)"));
+  if (r.tests.length > 300) { const tr = el("tr"); const td = el("td", "…and " + (r.tests.length - 300) + " more (use the API for the full list)", "muted"); td.colSpan = 5; tr.appendChild(td); body.appendChild(tr); }
   updateSelCount();
 }
 
-/* select-all checkbox */
-$("chk-all").onchange = () => {
-  document.querySelectorAll("#tests input.chk-test").forEach(c => c.checked = $("chk-all").checked);
-  updateSelCount();
-};
+$("chk-all").onchange = () => { document.querySelectorAll("#tests input.chk-test").forEach(c => c.checked = $("chk-all").checked); updateSelCount(); };
 
-/* batch analyse selected */
+/* ── Batch analyse ─────────────────────────────────────────── */
 let batchStop = false;
 $("btn-stop-batch").onclick = () => { batchStop = true; };
 $("btn-analyse-sel").onclick = async () => {
@@ -432,16 +870,14 @@ $("btn-analyse-sel").onclick = async () => {
   const testIds = checkboxes.map(c => c.dataset.testId);
   const total = testIds.length, batchSize = 5;
   let done = 0; batchStop = false;
-  $("btn-stop-batch").style.display = "inline-block";
-  $("batch-bar-fill").style.display = "inline-block";
+  $("btn-stop-batch").style.display = "inline-flex";
+  $("batch-pbar").classList.remove("hidden");
   $("btn-analyse-sel").disabled = true;
   showErr(null);
   for (let i = 0; i < total && !batchStop; i += batchSize) {
     const batch = testIds.slice(i, i + batchSize);
     $("batch-progress").textContent = "Analysing " + (i + 1) + "–" + Math.min(i + batchSize, total) + " of " + total + "…";
-    const results = await Promise.allSettled(
-      batch.map(tid => api("POST", "/api/runs/" + run.id + "/analyse", { test_id: tid }))
-    );
+    const results = await Promise.allSettled(batch.map(tid => api("POST", "/api/runs/" + run.id + "/analyse", { test_id: tid })));
     results.forEach((res, idx) => {
       const tid = batch[idx];
       const tr = [...document.querySelectorAll("#tests tr")].find(r => r.dataset.testId === tid);
@@ -450,19 +886,15 @@ $("btn-analyse-sel").onclick = async () => {
       const btn = tr.querySelector("button");
       if (res.status === "fulfilled") {
         const c = res.value;
-        // update the test object in run so restore works correctly
         const t = run.tests.find(t => t.id === tid); if (t) t.case_id = c.id;
         if (btn) btn.textContent = "Open analysis";
-        // show category badge in detail cell
         const detailTd = tr.cells[3];
         if (detailTd && c.classification) {
           detailTd.replaceChildren();
           detailTd.appendChild(el("span", c.classification.category + " " + Math.round(c.classification.confidence * 100) + "%", "badge " + c.classification.category));
         }
         current = c;
-      } else {
-        if (btn) { btn.textContent = "Retry"; btn.style.background = "var(--bad)"; }
-      }
+      } else { if (btn) { btn.textContent = "Retry"; btn.className = "btn-danger btn-sm"; } }
       done++;
     });
     $("batch-bar-i").style.width = Math.round(done / total * 100) + "%";
@@ -474,101 +906,164 @@ $("btn-analyse-sel").onclick = async () => {
   if (current) renderCase(current);
 };
 
-/* case */
+/* ── Render case ───────────────────────────────────────────── */
 function renderCase(c) {
   current = c; const k = c.classification, caps = c.capabilities;
-  $("case-card").classList.remove("hidden"); $("c-name").textContent = " · " + c.name;
+  $("case-card").classList.remove("hidden"); $("c-name").textContent = "· " + c.name;
   const cat = $("r-cat"); cat.textContent = k.category; cat.className = "badge " + k.category;
-  $("r-bar").style.width = Math.round(k.confidence * 100) + "%"; $("r-conf").textContent = Math.round(k.confidence * 100) + "%";
-  $("r-src").textContent = c.source === "kb" ? "from knowledge base (no LLM call)" : "LLM analysis"; $("r-src").className = "pill " + (c.source === "kb" ? "ok" : "");
+  $("r-bar").style.width = Math.round(k.confidence * 100) + "%";
+  $("r-conf").textContent = Math.round(k.confidence * 100) + "%";
+  $("r-src").textContent = c.source === "kb" ? "⚡ from KB (no LLM)" : "🤖 LLM analysis";
+  $("r-src").className = "pill" + (c.source === "kb" ? " ok" : "");
+
   const hints = $("kbhints"); hints.replaceChildren();
-  if (c.kb_hints && c.kb_hints.length && c.source !== "kb") { const box = el("div", undefined, "kbbox"); box.appendChild(el("b", "Similar known problems: ")); box.appendChild(document.createTextNode(c.kb_hints.map(h => h.problem + " [" + h.status + ", " + Math.round(h.score * 100) + "%]").join("; "))); hints.appendChild(box); }
-  $("r-summary").textContent = k.summary;
-  $("r-root").textContent = k.root_cause ? "Root cause: " + k.root_cause : ""; $("r-wait").textContent = k.waiting_on ? "Was waiting on: " + k.waiting_on : ""; $("r-comp").textContent = k.suspected_component ? "Component: " + k.suspected_component : "";
-  const ev = $("r-evidence"); ev.replaceChildren(); (k.evidence.length ? k.evidence : ["(none)"]).forEach(e => ev.appendChild(el("li", e)));
-  $("r-fix").textContent = k.fix_suggestion || "-";
-  const hist = $("r-history"); hist.replaceChildren(); c.history.forEach((h, i) => hist.appendChild(el("span", "#" + (i + 1) + " " + h.category + " " + Math.round(h.confidence * 100) + "% (" + h.source + ")")));
+  if (c.kb_hints && c.kb_hints.length && c.source !== "kb") {
+    const box = el("div", undefined, "kbbox");
+    const b = el("b", "🧠 Similar known problems: "); box.appendChild(b);
+    box.appendChild(document.createTextNode(c.kb_hints.map(h => h.problem + " [" + h.status + ", " + Math.round(h.score * 100) + "%]").join("  ·  ")));
+    hints.appendChild(box);
+  }
+
+  $("r-summary").textContent = k.summary || "—";
+  $("r-root").textContent = k.root_cause || "—";
+  $("row-wait").classList.toggle("hidden", !k.waiting_on); $("r-wait").textContent = k.waiting_on || "";
+  $("row-comp").classList.toggle("hidden", !k.suspected_component); $("r-comp").textContent = k.suspected_component || "";
+
+  const ev = $("r-evidence"); ev.replaceChildren();
+  (k.evidence.length ? k.evidence : ["(none)"]).forEach(e => ev.appendChild(el("li", e)));
+  $("r-fix").textContent = k.fix_suggestion || "—";
+
+  const hist = $("r-history"); hist.replaceChildren();
+  c.history.forEach((h, i) => {
+    const span = el("span", undefined, "tl-item");
+    span.textContent = "#" + (i + 1) + " " + h.category + " " + Math.round(h.confidence * 100) + "% (" + h.source + ")";
+    hist.appendChild(span);
+  });
+
+  // Q&A panel
   const ask = $("ask"), fields = $("ask-fields"); fields.replaceChildren();
-  if (k.needs_info) { ask.classList.remove("hidden"); k.missing_info.forEach(m => { const w = el("div"); w.style.marginBottom = "8px"; const ta = el("textarea"); ta.style.minHeight = "70px"; ta.dataset.question = m.question; ta.placeholder = "Your answer / pasted output"; w.append(el("label", m.question), ta); fields.appendChild(w); }); } else ask.classList.add("hidden");
-  // Soft-cap banner (analysis_capped): warn user, offer continue or draft-issue.
+  if (k.needs_info) {
+    ask.classList.remove("hidden");
+    k.missing_info.forEach(m => {
+      const w = el("div"); w.style.marginBottom = "10px";
+      const lbl = el("label", m.question);
+      const ta = el("textarea"); ta.style.minHeight = "75px"; ta.dataset.question = m.question; ta.placeholder = "Your answer / pasted output";
+      w.append(lbl, ta); fields.appendChild(w);
+    });
+  } else ask.classList.add("hidden");
+
+  // Cap banners
   const capBanner = $("cap-banner"), exBanner = $("exhausted-banner");
   capBanner.classList.toggle("hidden", !c.analysis_capped || c.analysis_exhausted || !k.needs_info);
   if (c.analysis_capped && k.needs_info && !c.analysis_exhausted) {
-    $("cap-title").textContent = "\u26A0\uFE0F Max analysis rounds reached";
-    $("cap-msg").textContent = "The LLM has been asked the maximum number of times. You can continue one more round if you have new information, or draft an issue to track this failure.";
+    $("cap-title").textContent = "⚠️  Max analysis rounds reached";
+    $("cap-msg").textContent = "The LLM has been asked the maximum number of times. Continue one more round if you have new info, or draft an issue to track this failure.";
   }
-  // Hard-cap banner (analysis_exhausted): issue was auto-drafted.
   exBanner.classList.toggle("hidden", !c.analysis_exhausted);
-  $("btn-patch").disabled = !caps.can_patch; $("btn-issue").disabled = !caps.can_issue; $("btn-kb").disabled = k.needs_info;
+
+  $("btn-patch").disabled = !caps.can_patch;
+  $("btn-issue").disabled = !caps.can_issue;
+  $("btn-kb").disabled = k.needs_info;
+
   const hs = [];
-  if (!caps.can_patch) hs.push(caps.mode === "generic" ? "No project repository found: patch generation is unavailable." : "A patch needs a confident diagnosis and a target file in the repository.");
+  if (!caps.can_patch) hs.push(caps.mode === "generic" ? "No project repository: patch generation unavailable." : "Patch needs a confident diagnosis and a target file in the repo.");
   if (!caps.can_issue) hs.push("Issues are drafted for a confident product_bug, or after a fix failed its rerun.");
   if (!caps.github_configured) hs.push("GitHub is not configured for this project.");
-  $("hint").textContent = hs.join(" ");
+  $("hint").textContent = hs.join("  ·  ");
+
   $("patch-card").classList.toggle("hidden", !c.patch && !c.rerun);
-  if (c.patch) { renderDiff(c.patch.diff); $("patch-src").textContent = c.patch.from_kb ? " · replayed from a verified knowledge-base fix (no LLM call)" : ""; } else $("patch").replaceChildren();
+  if (c.patch) { renderDiff(c.patch.diff); $("patch-src").textContent = c.patch.from_kb ? "· replayed from verified KB fix (no LLM)" : ""; }
+  else $("patch").replaceChildren();
+
   const rs = $("rerun-status"); rs.replaceChildren();
-  if (c.rerun && c.rerun.status !== "pending") rs.appendChild(el("b", c.rerun.status === "passed" ? "Rerun passed: fix verified and saved to the knowledge base. You can draft the pull request." : "Rerun failed (attempt " + c.rerun.attempts + "). The new log was analysed; see the updated diagnosis above." + (c.rerun.exhausted ? " Attempts exhausted: draft an issue." : ""), c.rerun.status === "passed" ? "" : "err"));
+  if (c.rerun && c.rerun.status !== "pending") {
+    const isPass = c.rerun.status === "passed";
+    const box = el("div", isPass
+      ? "✅ Rerun passed — fix verified and saved to the knowledge base. You can draft the pull request."
+      : "❌ Rerun failed (attempt " + c.rerun.attempts + "). The new log was analysed; see the updated diagnosis above." + (c.rerun.exhausted ? " Attempts exhausted — draft an issue." : ""),
+      isPass ? "rerun-pass" : "rerun-fail");
+    rs.appendChild(box);
+  }
   $("btn-pr").disabled = !c.patch;
   if (!c.issue_draft && !c.pr_draft) $("draft-card").classList.add("hidden");
 }
-function renderDiff(diff) { const pre = $("patch"); pre.replaceChildren(); diff.split("\n").forEach(l => pre.appendChild(el("span", l + "\n", l.startsWith("+") && !l.startsWith("+++") ? "add" : l.startsWith("-") && !l.startsWith("---") ? "del" : ""))); }
+
+function renderDiff(diff) {
+  const pre = $("patch"); pre.replaceChildren();
+  diff.split("\n").forEach(l => {
+    const isAdd = l.startsWith("+") && !l.startsWith("+++");
+    const isDel = l.startsWith("-") && !l.startsWith("---");
+    const isHdr = l.startsWith("@@");
+    pre.appendChild(el("span", l + "\n", isAdd ? "add" : isDel ? "del" : isHdr ? "hdr" : ""));
+  });
+}
+
 function showDraft(kind, d) {
   draftKind = kind; $("draft-card").classList.remove("hidden");
-  $("draft-title-h").textContent = (kind === "issue" ? "Review GitHub issue" : "Review pull request") + " (nothing is created until you approve)";
-  $("draft-title").value = d.title; $("draft-body").value = d.body; const dups = $("dups"); dups.replaceChildren();
-  if (kind === "issue" && d.duplicates && d.duplicates.length) { dups.appendChild(el("b", "Possible duplicates: ")); d.duplicates.forEach(x => { const a = el("a", "#" + x.number + " " + x.title + " (" + x.state + ")"); a.href = x.url; a.target = "_blank"; a.rel = "noopener"; dups.append(a, document.createTextNode("  ")); }); }
+  $("draft-title-h").textContent = (kind === "issue" ? "📋 Review GitHub issue" : "🔀 Review pull request") + " — nothing is created until you approve";
+  $("draft-title").value = d.title; $("draft-body").value = d.body;
+  const dups = $("dups"); dups.replaceChildren();
+  if (kind === "issue" && d.duplicates && d.duplicates.length) {
+    dups.appendChild(el("b", "⚠️ Possible duplicates: "));
+    d.duplicates.forEach(x => { const a = el("a", "#" + x.number + " " + x.title + " (" + x.state + ")"); a.href = x.url; a.target = "_blank"; a.rel = "noopener"; dups.append(a, document.createTextNode("  ")); });
+  }
   $("published").replaceChildren();
 }
 
-/* actions */
+/* ── Button actions ────────────────────────────────────────── */
 $("btn-submit").onclick = () => act("Parsing…", async () => {
-  const project = $("sel-project").value;
-  const f = $("file").files[0]; let r;
+  const project = $("sel-project").value, f = $("file").files[0]; let r;
   if (f) { const fd = new FormData(); fd.append("file", f); fd.append("project", project); r = await api("POST", "/api/runs", fd); await loadUploads(); }
   else r = await api("POST", "/api/runs", { project, log: $("log").value, name: "pasted log" });
   current = null; $("case-card").classList.add("hidden"); $("patch-card").classList.add("hidden"); $("draft-card").classList.add("hidden"); renderRun(r);
   await loadRecentRuns();
 });
-$("btn-info").onclick = () => act("Re-analysing with your input…", async () => {
-  const answers = [...document.querySelectorAll("#ask-fields textarea")].filter(t => t.value.trim()); if (!answers.length) throw new Error("Enter an answer for at least one question.");
+$("btn-info").onclick = () => act("Re-analysing…", async () => {
+  const answers = [...document.querySelectorAll("#ask-fields textarea")].filter(t => t.value.trim());
+  if (!answers.length) throw new Error("Enter an answer for at least one question.");
   let data = current; for (const t of answers) data = await api("POST", "/api/case/" + current.id + "/info", { answer: t.value, question: t.dataset.question }); current = data;
 });
-// Continue 1 more round past the soft cap (force_continue=true).
-$("btn-continue").onclick = () => act("Re-analysing with your input…", async () => {
-  const answers = [...document.querySelectorAll("#ask-fields textarea")].filter(t => t.value.trim()); if (!answers.length) throw new Error("Enter an answer for at least one question.");
+$("btn-continue").onclick = () => act("Re-analysing…", async () => {
+  const answers = [...document.querySelectorAll("#ask-fields textarea")].filter(t => t.value.trim());
+  if (!answers.length) throw new Error("Enter an answer for at least one question.");
   let data = current; for (const t of answers) data = await api("POST", "/api/case/" + current.id + "/info", { answer: t.value, question: t.dataset.question, force_continue: true }); current = data;
 });
-// Draft issue from the cap banner.
-$("btn-issue-cap").onclick = () => act("Drafting issue…", async () => { current = await api("POST", "/api/case/" + current.id + "/draft/issue"); showDraft("issue", current.issue_draft); });
-// Review auto-drafted issue after hard cap.
+$("btn-issue-cap").onclick  = () => act("Drafting issue…",  async () => { current = await api("POST", "/api/case/" + current.id + "/draft/issue"); showDraft("issue", current.issue_draft); });
 $("btn-review-issue").onclick = () => { if (current && current.issue_draft) showDraft("issue", current.issue_draft); };
 const doPatch = () => act("Generating patch…", async () => { current = await api("POST", "/api/case/" + current.id + "/patch", { notes: $("patch-notes").value }); });
 $("btn-patch").onclick = doPatch; $("btn-patch2").onclick = doPatch;
 $("btn-rerun").onclick = () => act("Re-analysing rerun log…", async () => { const f = $("rerun-file").files[0]; if (!f) throw new Error("Choose the rerun log file."); const fd = new FormData(); fd.append("file", f); current = await api("POST", "/api/case/" + current.id + "/rerun", fd); });
-$("btn-kb").onclick = () => act("Saving…", async () => { await api("POST", "/api/case/" + current.id + "/kb"); });
-$("btn-issue").onclick = () => act("Drafting issue…", async () => { current = await api("POST", "/api/case/" + current.id + "/draft/issue"); showDraft("issue", current.issue_draft); });
-$("btn-pr").onclick = () => act("Drafting pull request…", async () => { current = await api("POST", "/api/case/" + current.id + "/draft/pr"); showDraft("pr", current.pr_draft); });
-$("btn-save").onclick = () => act("Saving…", async () => { current = await api("PUT", "/api/case/" + current.id + "/draft/" + draftKind, { title: $("draft-title").value, body: $("draft-body").value }); });
+$("btn-kb").onclick    = () => act("Saving to KB…",          async () => { await api("POST", "/api/case/" + current.id + "/kb"); });
+$("btn-issue").onclick = () => act("Drafting issue…",        async () => { current = await api("POST", "/api/case/" + current.id + "/draft/issue"); showDraft("issue", current.issue_draft); });
+$("btn-pr").onclick    = () => act("Drafting PR…",           async () => { current = await api("POST", "/api/case/" + current.id + "/draft/pr");   showDraft("pr",    current.pr_draft);    });
+$("btn-save").onclick  = () => act("Saving…",                async () => { current = await api("PUT", "/api/case/" + current.id + "/draft/" + draftKind, { title: $("draft-title").value, body: $("draft-body").value }); });
 $("btn-publish").onclick = () => act("Publishing…", async () => {
   if (!confirm("Create this " + (draftKind === "issue" ? "issue" : "pull request") + " on GitHub now?")) return;
   await api("PUT", "/api/case/" + current.id + "/draft/" + draftKind, { title: $("draft-title").value, body: $("draft-body").value });
-  const r = await api("POST", "/api/case/" + current.id + "/publish/" + draftKind, { approved: true }); current = r.case;
-  const box = $("published"); box.replaceChildren(); box.appendChild(el("b", r.published.dry_run ? "Dry run (nothing created): " : "Created: "));
+  const r = await api("POST", "/api/case/" + current.id + "/publish/" + draftKind, { approved: true });
+  current = r.case;
+  const box = el("div", undefined, "pub-box");
+  box.appendChild(el("b", r.published.dry_run ? "Dry run (nothing created on GitHub): " : "✅ Created: "));
   const a = el("a", r.published.url); a.href = r.published.url; a.target = "_blank"; a.rel = "noopener"; box.appendChild(a);
+  $("published").replaceChildren(); $("published").appendChild(box);
 });
-$("file").onchange = () => { const f = $("file").files[0]; if (f) f.text().then(t => { $("log").value = t.slice(0, 200000); }); };
+
+$("file").onchange   = () => { const f = $("file").files[0]; if (f) f.text().then(t => { $("log").value = t.slice(0, 200000); }); };
 $("sample").onchange = () => { const i = $("sample").value; if (i !== "") { $("log").value = samples[i].text; $("file").value = ""; } };
 
+/* ── Boot ──────────────────────────────────────────────────── */
 (async () => {
   try {
     const s = await api("GET", "/api/status");
-    $("p-llm").textContent = s.llm_configured ? "LLM ready (" + s.llm_backend + ")" : "LLM not ready (" + s.llm_backend + ")"; $("p-llm").classList.add(s.llm_configured ? "ok" : "off");
-    $("p-gh").textContent = s.github_token || s.github_dry_run ? (s.github_dry_run ? "GitHub: dry run" : "GitHub ready") : "GitHub token missing"; $("p-gh").classList.add(s.github_token || s.github_dry_run ? "ok" : "off");
+    $("p-llm").textContent = s.llm_configured ? "LLM ready · " + s.llm_backend : "LLM not configured";
+    $("p-llm").classList.add(s.llm_configured ? "ok" : "off");
+    $("p-gh").textContent = s.github_token ? "GitHub ready" : s.github_dry_run ? "GitHub · dry run" : "GitHub token missing";
+    $("p-gh").classList.add(s.github_token || s.github_dry_run ? "ok" : "off");
     s.log_formats.forEach(f => {
       [$("np-fmt"), $("cl-fmt")].forEach(sel => { const o = el("option", f); o.value = f; sel.appendChild(o); });
     });
-    samples = await api("GET", "/api/samples"); samples.forEach((x, i) => { const o = el("option", x.name); o.value = i; $("sample").appendChild(o); });
+    samples = await api("GET", "/api/samples");
+    samples.forEach((x, i) => { const o = el("option", x.name); o.value = i; $("sample").appendChild(o); });
     await loadProjects(); await loadUploads(); await loadRecentRuns();
   } catch (e) { showErr(e); }
 })();
