@@ -19,6 +19,7 @@ def client():
 def test_index_health_status_samples(client):
     assert client.get("/").status_code == 200
     assert client.get("/healthz").get_json() == {"status": "ok"}
+    assert client.get("/favicon.ico").mimetype == "image/svg+xml"
     status = client.get("/api/status").get_json()
     assert status["github_dry_run"] is True and "pytest" in status["log_formats"]
     names = {s["name"] for s in client.get("/api/samples").get_json()}

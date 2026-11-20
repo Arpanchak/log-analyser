@@ -2,7 +2,7 @@
 import os
 import re
 
-from flask import Flask, jsonify, render_template, request
+from flask import Flask, jsonify, make_response, render_template, request
 
 from core import config, llm, parsers, service
 from core.errors import AppError
@@ -71,7 +71,18 @@ def _log_from_request() -> tuple[str, str, str]:
 
 @app.get("/")
 def index():
-    return render_template("index.html")
+    resp = make_response(render_template("index.html"))
+    resp.headers["Cache-Control"] = "no-store, no-cache, must-revalidate, max-age=0"
+    resp.headers["Pragma"] = "no-cache"
+    resp.headers["Expires"] = "0"
+    resp.headers["Surrogate-Control"] = "no-store"
+    resp.headers["Vary"] = "*"
+    return resp
+
+
+@app.get("/favicon.ico")
+def favicon():
+    return app.send_static_file("favicon.svg")
 
 
 @app.get("/healthz")
